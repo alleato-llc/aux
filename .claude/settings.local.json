@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(gh repo view:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git mv:*)",
+      "Bash(swift build:*)",
+      "Bash(git ls-remote:*)",
+      "Bash(swift test:*)",
+      "Bash(tree:*)",
+      "Bash(PICKLE_REPORT=1 swift test:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)"
+    ]
+  }
+}
