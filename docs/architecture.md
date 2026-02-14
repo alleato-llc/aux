@@ -19,7 +19,7 @@ The TUI is where the bulk of the architecture lives. It follows a unidirectional
 | [ArgumentParser](https://github.com/apple/swift-argument-parser) | CLI argument parsing |
 | [Accelerate](https://developer.apple.com/documentation/accelerate) | FFT for spectrum visualizer (system framework) |
 
-**LibAVKit types used:** `AudioPlayer`, `AVAudioEngineOutput`, `Decoder`, `MetadataReader`, `AudioMetadata`, `AudioOutputFormat`, `DecoderError`
+**LibAVKit types used:** `AudioPlayer`, `AVAudioEngineOutput`, `MetadataReader`, `AudioMetadata`
 
 **Tint types used:** `Application`, `Theme`, `Rect`, `Buffer`, `Cell`, `Style`, `Layout`, `Block`, `ListWidget`, `Table`, `ProgressBar`, `Key`
 
@@ -38,6 +38,9 @@ This means aux has no `import CFFmpeg` statements, no C interop code, and no dir
 ```
 Sources/aux/
 ├── Aux.swift                  @main entry point, mode dispatch
+├── FilePlayer.swift           File mode playback (AudioPlayer + MetadataReader)
+├── StdinPlayer.swift          STDIN mode playback (AudioPlayer with pipe support)
+├── ConsoleOutput.swift        Shared console helpers (printHeader, writeProgress, formatTime)
 ├── KeyHandler.swift           Key → state mutation dispatch table
 ├── PlayerTheme.swift          Tint Theme conformance (purple/lavender palette)
 ├── Models/
@@ -134,13 +137,14 @@ Next frame renders updated state
 
 ### Playback Loop
 
-When a track is played, aux calls LibAVKit's `AudioPlayer` API. From that point, decoding and audio output happen entirely within LibAVKit. The only data that flows back into aux is the `onSamples` callback (raw PCM for visualizers) and `onStateChange` (track completion).
+When a track is played, aux calls LibAVKit's `AudioPlayer` API. From that point, decoding and audio output happen entirely within LibAVKit. The only data that flows back into aux is the `onSamples` callback (raw PCM for visualizers) and `onStateChange` (track completion). All three modes (TUI, file, STDIN) use `AudioPlayer` for playback — STDIN mode uses `AudioPlayer.open(path:inputFormat:)` with `"pipe:0"` as the path.
 
 ```
 PlayerState.playTrack(track)                 ┄┄┄ aux
   │
   ├─ player.stop()                           ┄┄┄ LibAVKit
   ├─ player.open(url:)                       ┄┄┄ LibAVKit (FFmpeg opens file, reads headers)
+  │  — or player.open(path:inputFormat:)     ┄┄┄ LibAVKit (FFmpeg opens pipe/path)
   ├─ player.play()                           ┄┄┄ LibAVKit (FFmpeg decodes on background thread)
   │
   ▼
@@ -151,6 +155,8 @@ AudioPlayer decode loop (background thread)  ┄┄┄ LibAVKit internals
   ├─ onSamples callback → SampleBuffer       ┄┄┄ LibAVKit → aux (raw PCM floats)
   └─ onStateChange(.completed)               ┄┄┄ LibAVKit → aux → PlayerState.nextTrack()
 ```
+
+Metadata is read separately by callers when needed: file mode uses `MetadataReader().read(url:)` for header display, TUI mode reads metadata during library scanning via `LibraryIndex`. STDIN mode has no metadata (pipes don't carry tags).
 
 ## Models
 
