@@ -14,13 +14,24 @@ The TUI is where the bulk of the architecture lives. It follows a unidirectional
 
 | Package | Role |
 |---------|------|
-| [LibAVKit](https://github.com/aalleato/libav-kit) | Audio decoding, playback, and metadata reading via FFmpeg's C API |
+| [LibAVKit](https://github.com/aalleato/libav-kit) | Audio decoding, playback, and metadata reading |
 | [Tint](https://github.com/aalleato/tint) | Terminal UI framework — event loop, layout, widgets, styling |
 | [ArgumentParser](https://github.com/apple/swift-argument-parser) | CLI argument parsing |
+| [Accelerate](https://developer.apple.com/documentation/accelerate) | FFT for spectrum visualizer (system framework) |
 
 **LibAVKit types used:** `AudioPlayer`, `AVAudioEngineOutput`, `Decoder`, `MetadataReader`, `AudioMetadata`, `AudioOutputFormat`, `DecoderError`
 
 **Tint types used:** `Application`, `Theme`, `Rect`, `Buffer`, `Cell`, `Style`, `Layout`, `Block`, `ListWidget`, `Table`, `ProgressBar`, `Key`
+
+### FFmpeg boundary
+
+aux does **not** import or interact with FFmpeg directly. All audio operations go through LibAVKit's Swift API, which internally wraps FFmpeg's C libraries (`libavcodec`, `libavformat`, `libavutil`, `libswresample`) via its `CFFmpeg` system library target. The dependency chain is:
+
+```
+aux → LibAVKit → CFFmpeg → FFmpeg
+```
+
+This means aux has no `import CFFmpeg` statements, no C interop code, and no direct knowledge of FFmpeg data structures. The FFmpeg dependency is a transitive build-time requirement (FFmpeg must be installed for LibAVKit to compile) but is entirely encapsulated behind LibAVKit's public Swift types. If LibAVKit were reimplemented on a different audio backend, aux would require no source changes.
 
 ## Module Structure
 
