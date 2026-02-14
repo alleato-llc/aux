@@ -58,34 +58,39 @@ Sources/aux/
 
 ## Data Flow
 
+aux interacts exclusively with LibAVKit's Swift API. Every diagram below shows the boundary between aux code and LibAVKit — nothing in aux reaches past LibAVKit into FFmpeg.
+
 ### Initialization (TUI mode)
 
 ```
 Directory path
   │
   ▼
-LibraryIndex.scan()
-  │  Uses MetadataReader to read each audio file
+LibraryIndex.scan()                          ┄┄┄ aux
+  │
+  │  MetadataReader.read(url:) per file      ┄┄┄ LibAVKit (FFmpeg reads tags internally)
+  │         │
+  │         ▼
+  │  AudioMetadata  ──→  Track  ──→  Album
   ▼
 [Album]  (immutable library)
   │
   ▼
-PlayerState(albums:, player:)
+PlayerState(albums:, player:)                ┄┄┄ aux
   │  Holds all mutable state
   │  Wires player.onStateChange → auto-advance on track completion
   │
   ▼
-AVAudioEngineOutput.onSamples → SampleBuffer.write()
-  │  Audio tap feeds circular buffer for visualizers
+AVAudioEngineOutput.onSamples                ┄┄┄ LibAVKit (decoded PCM samples)
+  │  → SampleBuffer.write()                  ┄┄┄ aux (circular buffer for visualizers)
   │
   ▼
-Application(theme:).run(render:, onKey:)
-  │  Tint event loop starts
+Application(theme:).run(render:, onKey:)     ┄┄┄ Tint event loop starts
 ```
 
 ### Render Loop
 
-Each frame, Tint calls the render closure with an area and buffer:
+Each frame, Tint calls the render closure with an area and buffer. Rendering is entirely within aux — no LibAVKit calls are made except reading `player.currentTime` and `player.duration` for the progress bar.
 
 ```
 AppRenderer.render(state, area, theme, &buffer)
@@ -96,30 +101,32 @@ AppRenderer.render(state, area, theme, &buffer)
   │   │   └─ TrackListRenderer  (80% width) — tracks in selected album
   │   └─ Bottom panel (5 rows)
   │       ├─ Visualizer (40%)
-  │       │   ├─ OscilloscopeRenderer  (if mode == .oscilloscope)
-  │       │   └─ SpectrumRenderer      (if mode == .spectrum)
-  │       └─ NowPlayingRenderer (60%) — status, progress bar, time
+  │       │   ├─ OscilloscopeRenderer  — reads SampleBuffer (aux)
+  │       │   └─ SpectrumRenderer      — reads SampleBuffer (aux), FFT via Accelerate
+  │       └─ NowPlayingRenderer (60%) — reads player.currentTime (LibAVKit)
   │
   ├─ Search overlay (if state.isSearching) — input bar at bottom
   └─ Help overlay (if state.isShowingHelp) — centered modal
 ```
 
-Renderers are pure functions. They read from `PlayerState` and write into `Buffer`. No state mutation occurs during rendering.
+Renderers are pure functions. They read from `PlayerState` and write into `Buffer`. No state mutation occurs during rendering. The visualizers read raw PCM samples that LibAVKit already decoded — they never touch FFmpeg or LibAVKit's decoding API themselves.
 
 ### Interaction Loop
 
+Key handling is entirely within aux. LibAVKit is only called when a playback action is triggered (play, pause, stop, seek).
+
 ```
-Key event
+Key event                                    ┄┄┄ Tint
   │
   ▼
-KeyHandler.handle(key, state, app)
+KeyHandler.handle(key, state, app)           ┄┄┄ aux
   │
   ├─ Help active?  → only ? and Escape handled
   ├─ Search active? → Escape/Enter/Tab/Backspace/char handled
   └─ Normal mode   → navigation, playback, visualizer, search, quit
   │
-  ▼
-PlayerState mutation
+  ├─ UI actions (moveUp, focusLeft, ...)     ┄┄┄ aux (PlayerState only)
+  └─ Playback actions (play, pause, ...)     ┄┄┄ aux → LibAVKit
   │
   ▼
 Next frame renders updated state
@@ -127,19 +134,22 @@ Next frame renders updated state
 
 ### Playback Loop
 
+When a track is played, aux calls LibAVKit's `AudioPlayer` API. From that point, decoding and audio output happen entirely within LibAVKit. The only data that flows back into aux is the `onSamples` callback (raw PCM for visualizers) and `onStateChange` (track completion).
+
 ```
-PlayerState.playTrack(track)
+PlayerState.playTrack(track)                 ┄┄┄ aux
   │
-  ├─ player.stop()
-  ├─ player.open(url:)
-  ├─ player.play()
+  ├─ player.stop()                           ┄┄┄ LibAVKit
+  ├─ player.open(url:)                       ┄┄┄ LibAVKit (FFmpeg opens file, reads headers)
+  ├─ player.play()                           ┄┄┄ LibAVKit (FFmpeg decodes on background thread)
   │
   ▼
-AudioPlayer decode loop (background thread)
+AudioPlayer decode loop (background thread)  ┄┄┄ LibAVKit internals
   │
-  ├─ Decoded frames → AVAudioEngineOutput → speakers
-  ├─ onSamples callback → SampleBuffer.write()  (for visualizers)
-  └─ onStateChange(.completed) → PlayerState.nextTrack()
+  ├─ FFmpeg decodes frames                   ┄┄┄ LibAVKit (CFFmpeg, not visible to aux)
+  ├─ AVAudioEngineOutput schedules audio     ┄┄┄ LibAVKit → AVFoundation → speakers
+  ├─ onSamples callback → SampleBuffer       ┄┄┄ LibAVKit → aux (raw PCM floats)
+  └─ onStateChange(.completed)               ┄┄┄ LibAVKit → aux → PlayerState.nextTrack()
 ```
 
 ## Models
