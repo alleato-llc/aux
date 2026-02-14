@@ -110,6 +110,29 @@ ffmpeg -i input.wav -f flac - 2>/dev/null | aux --format flac -
 Lossless: FLAC, ALAC, WAV, AIFF, WavPack
 Lossy: MP3, AAC, Opus, Vorbis
 
+## Testing
+
+aux uses [PickleKit](https://github.com/alleato-llc/pickle-kit) (a Swift-native Cucumber/BDD framework) to test the TUI through its state machine. Feature files live at the project root in `Features/`:
+
+```gherkin
+# Features/search.feature
+Scenario: Search filters albums by name
+  Given a library with 3 albums of 3 tracks each
+  And I am in search mode
+  When I type "Album 1"
+  Then 1 album is visible
+```
+
+Tests drive `KeyHandler.handle()` with key events and assert on `PlayerState` properties. Renderers are pure functions of state, so proving the state is correct transitively proves the UI is correct — no terminal buffer inspection needed.
+
+```bash
+swift test                        # run all tests
+swift test --filter AuxBDDTests   # run only BDD scenarios
+PICKLE_REPORT=1 swift test        # generate HTML report at pickle-report.html
+```
+
+See [docs/testing/BDD.md](docs/testing/BDD.md) for the full testing guide and [docs/testing/PHILOSOPHY.md](docs/testing/PHILOSOPHY.md) for design decisions.
+
 ## Architecture
 
 See [docs/architecture.md](docs/architecture.md) for a detailed design overview covering the rendering pipeline, data flow, models, and visualizer internals.
