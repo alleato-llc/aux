@@ -260,7 +260,7 @@ Features/                      Gherkin feature files (project root)
 └── visualizer.feature
 
 Tests/auxTests/
-├── Steps/
+├── Steps/                              BDD step definitions
 │   ├── AuxTestContext.swift
 │   ├── CommonSetupSteps.swift
 │   ├── CommonActionSteps.swift
@@ -269,8 +269,23 @@ Tests/auxTests/
 │   ├── SearchVerificationSteps.swift
 │   ├── HelpVerificationSteps.swift
 │   └── VisualizerVerificationSteps.swift
-├── TestData.swift
-└── AuxBDDTests.swift
+├── Support/                            Test helpers
+│   ├── TemporaryDirectory.swift
+│   └── FixtureGenerator.swift
+├── TestData.swift                      Fake test data factories
+├── AuxBDDTests.swift                   BDD test runner
+├── SampleBufferTests.swift             Unit tests
+├── FormatTimeTests.swift
+├── AlbumTests.swift
+├── TrackTests.swift
+├── KeyHandlerTests.swift
+├── PlayerStateEdgeCaseTests.swift
+├── PlayerStatePlaybackTests.swift
+├── OscilloscopeComputationTests.swift
+├── SpectrumComputationTests.swift
+├── LibraryIndexTests.swift
+├── LibraryScanTests.swift              Integration tests
+└── PlaybackIntegrationTests.swift
 ```
 
 ## Running Tests

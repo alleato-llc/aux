@@ -29,7 +29,12 @@ public struct LibraryIndex {
             }
         }
 
-        // Group by album
+        return buildAlbums(from: tracks)
+    }
+
+    /// Group tracks by artist+album, sort tracks within each album by disc/track number,
+    /// and sort albums alphabetically by display name.
+    static func buildAlbums(from tracks: [Track]) -> [Album] {
         let grouped = Dictionary(grouping: tracks) { "\($0.artist) — \($0.album)" }
 
         return grouped.values.map { albumTracks in

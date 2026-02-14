@@ -57,7 +57,7 @@ Sources/
     └── Aux.swift              Entry point — @main ParsableCommand, mode dispatch
 
 Tests/auxTests/
-├── Steps/                     Step definitions
+├── Steps/                     BDD step definitions
 │   ├── AuxTestContext.swift
 │   ├── CommonSetupSteps.swift
 │   ├── CommonActionSteps.swift
@@ -66,8 +66,23 @@ Tests/auxTests/
 │   ├── SearchVerificationSteps.swift
 │   ├── HelpVerificationSteps.swift
 │   └── VisualizerVerificationSteps.swift
-├── TestData.swift
-└── AuxBDDTests.swift
+├── Support/                   Test helpers
+│   ├── TemporaryDirectory.swift   Auto-cleaning temp dir
+│   └── FixtureGenerator.swift     Real audio fixture creation (LibAVKit)
+├── TestData.swift             Fake test data factories
+├── AuxBDDTests.swift          BDD test runner
+├── SampleBufferTests.swift    Circular buffer unit tests
+├── FormatTimeTests.swift      Time formatting unit tests
+├── AlbumTests.swift           Album computed properties
+├── TrackTests.swift           Track init/metadata mapping
+├── KeyHandlerTests.swift      Key dispatch coverage
+├── PlayerStateEdgeCaseTests.swift      Filtered navigation, scroll, track edges
+├── PlayerStatePlaybackTests.swift      Playback state, search, visualizer, icons
+├── OscilloscopeComputationTests.swift  Waveform computation math
+├── SpectrumComputationTests.swift      FFT band grouping math
+├── LibraryIndexTests.swift    Album grouping/sorting logic
+├── LibraryScanTests.swift     Integration: scan real audio files
+└── PlaybackIntegrationTests.swift     Integration: playback with real files
 ```
 
 ## Key Conventions

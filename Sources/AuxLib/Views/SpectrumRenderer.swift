@@ -113,7 +113,7 @@ public struct SpectrumRenderer {
         return logBands(magnitudes: magnitudes, bandCount: bandCount)
     }
 
-    private static func logBands(magnitudes: [Float], bandCount: Int) -> [Float] {
+    static func logBands(magnitudes: [Float], bandCount: Int) -> [Float] {
         let binCount = magnitudes.count
         guard binCount > 0, bandCount > 0 else {
             return [Float](repeating: 0, count: bandCount)

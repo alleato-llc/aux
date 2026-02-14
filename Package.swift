@@ -32,6 +32,7 @@ let package = Package(
             name: "auxTests",
             dependencies: [
                 "AuxLib",
+                .product(name: "LibAVKit", package: "libav-kit"),
                 .product(name: "PickleKit", package: "pickle-kit"),
             ]
         ),

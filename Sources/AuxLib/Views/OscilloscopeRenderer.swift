@@ -5,6 +5,46 @@ public struct OscilloscopeRenderer {
     private static let brailleDotBits: [UInt32] = [0x01, 0x02, 0x04, 0x40]
     private static let brailleBase: UInt32 = 0x2800
 
+    /// Downsample raw samples to one signed peak per column.
+    /// Takes the value with the largest absolute magnitude in each block.
+    static func computePeaks(samples: [Float], columnCount: Int) -> [Float] {
+        let blockSize = max(1, samples.count / columnCount)
+        var peaks = [Float]()
+        peaks.reserveCapacity(columnCount)
+
+        for col in 0..<columnCount {
+            let start = col * blockSize
+            let end = min(start + blockSize, samples.count)
+            guard start < end else {
+                peaks.append(0)
+                continue
+            }
+            var peak: Float = 0
+            for i in start..<end {
+                if abs(samples[i]) > abs(peak) {
+                    peak = samples[i]
+                }
+            }
+            peaks.append(peak)
+        }
+        return peaks
+    }
+
+    /// Compute auto-normalization gain from peaks.
+    /// Scales so the loudest peak fills ~80% of half-height. Capped at 20x.
+    static func computeGain(peaks: [Float]) -> Float {
+        let maxAbs = peaks.max(by: { abs($0) < abs($1) }).map { abs($0) } ?? 0
+        return maxAbs > 0.001 ? min(0.8 / maxAbs, 20.0) : 1.0
+    }
+
+    /// Map a peak value to a vertical braille level.
+    /// +1.0 → level 0 (top), -1.0 → totalLevels-1 (bottom), 0.0 → midpoint.
+    static func levelForPeak(_ peak: Float, gain: Float, totalLevels: Int) -> Int {
+        let scaled = max(-1.0, min(1.0, peak * gain))
+        let normalized = (1.0 - scaled) / 2.0
+        return min(totalLevels - 1, Int(normalized * Float(totalLevels - 1)))
+    }
+
     public static func render(
         sampleBuffer: SampleBuffer,
         area: Rect,
@@ -24,37 +64,11 @@ public struct OscilloscopeRenderer {
         let inner = area.inner
         guard !inner.isEmpty, inner.height >= 1, inner.width >= 2 else { return }
 
-        // Read all samples and downsample to display width.
-        // Taking the signed peak (value with max |magnitude|) per column
-        // gives a smooth amplitude envelope instead of raw high-frequency noise.
         let allSamples = sampleBuffer.read(count: sampleBuffer.capacity)
-        let blockSize = max(1, allSamples.count / inner.width)
-        var peaks = [Float]()
-        peaks.reserveCapacity(inner.width)
-
-        for col in 0..<inner.width {
-            let start = col * blockSize
-            let end = min(start + blockSize, allSamples.count)
-            guard start < end else {
-                peaks.append(0)
-                continue
-            }
-            var peak: Float = 0
-            for i in start..<end {
-                if abs(allSamples[i]) > abs(peak) {
-                    peak = allSamples[i]
-                }
-            }
-            peaks.append(peak)
-        }
-
-        // Auto-normalize: scale peaks so the loudest fills ~80% of half-height.
-        // Cap gain at 20x to avoid amplifying near-silence into noise.
-        let maxAbs = peaks.max(by: { abs($0) < abs($1) }).map { abs($0) } ?? 0
-        let gain: Float = maxAbs > 0.001 ? min(0.8 / maxAbs, 20.0) : 1.0
+        let peaks = computePeaks(samples: allSamples, columnCount: inner.width)
+        let gain = computeGain(peaks: peaks)
 
         let waveStyle = theme.visualizer
-        // 4 braille sub-positions per row gives 4× vertical resolution
         let totalLevels = inner.height * 4
 
         // Draw waveform with braille dots
@@ -63,10 +77,7 @@ public struct OscilloscopeRenderer {
             let x = inner.x + col
             guard x < inner.right else { break }
 
-            let scaled = max(-1.0, min(1.0, peak * gain))
-            // Map [-1, 1] to [0, totalLevels-1]: +1 → 0 (top), -1 → totalLevels-1 (bottom)
-            let normalized = (1.0 - scaled) / 2.0
-            let level = min(totalLevels - 1, Int(normalized * Float(totalLevels - 1)))
+            let level = levelForPeak(peak, gain: gain, totalLevels: totalLevels)
 
             // Collect all levels for this column (main point + gap fill)
             var levels = [level]
