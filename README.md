@@ -4,8 +4,35 @@
 [![macOS 14.4+](https://img.shields.io/badge/macOS-14.4%2B-blue.svg)](https://www.apple.com/macos)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![SPM Compatible](https://img.shields.io/badge/SPM-Compatible-brightgreen.svg)](https://swift.org/package-manager)
+[![Built with Claude](https://img.shields.io/badge/Built%20with-Claude-blueviolet)](https://claude.ai)
 
 A terminal music player built on [LibAVKit](https://github.com/aalleato/libav-kit) and [Tint](https://github.com/aalleato/tint). Browse your library, play tracks, and watch real-time audio visualizations — all from the terminal.
+
+```
+╭─ Library ──────────╮╭─ Legend by Poco | ☊ ─────────────────────────────────────────────────────────────────────╮
+│  ♪ Poco - Legend   ││  9 tracks / 38:20 [1978] [Rock] | FLAC/24-bit/192kHz                                     │
+│                    ││ #   Title                                                                       Duration │
+│                    ││ ──────────────────────────────────────────────────────────────────────────────────────── │
+│                    ││ 1   Boomerang (Album Version)                                                   3:51     │
+│                    ││ 2   Spellbound                                                                  5:15     │
+│                    ││ 3   Barbados (Single Version)                                                   3:33     │
+│                    ││ 4   Little Darlin' (Album Version)                                              3:46     │
+│                    ││ 5   Love Comes Love Goes (Album Version)                                        3:57     │
+│                    ││ 6   Heart Of The Night ▶                                                        4:53     │
+│                    ││ 7   Crazy Love (Single Version)                                                 2:56     │
+│                    ││ 8   The Last Goodbye (Album Version)                                            5:41     │
+│                    ││ 9   Legend                                                                      4:24     │
+│                    ││                                                                                          │
+│                    ││                                                                                          │
+│                    ││                                                                                          │
+│                    ││                                                                                          │
+╰────────────────────╯╰──────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Spectrum ────────────────────────────────╮
+│      ▁█       ▇                           │ ▶ Heart Of The Night - Poco
+│▇▇▇▇▅▃███      █▆                          │ [██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]
+│██████████▆▇▇▂▃██▆█▆▄▆▄▂▃▂▂▄  ▁▁           │ 0:27 / 4:53
+╰───────────────────────────────────────────╯
+```
 
 ## Requirements
 
