@@ -27,6 +27,9 @@ $(swift build --show-bin-path)/aux ~/Music
 ```
 Sources/aux/
 ├── Aux.swift              Entry point — dispatches to file, STDIN, or TUI mode
+├── FilePlayer.swift       File mode playback (AudioPlayer + MetadataReader)
+├── StdinPlayer.swift      STDIN mode playback (AudioPlayer with pipe support)
+├── ConsoleOutput.swift    Shared console helpers (printHeader, writeProgress, formatTime)
 ├── KeyHandler.swift        Keyboard event → state mutation mapping
 ├── PlayerTheme.swift       Color and style definitions (Tint Theme)
 ├── Models/
