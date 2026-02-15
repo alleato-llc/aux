@@ -171,6 +171,42 @@ import Tint
         #expect(state.searchQuery == "q")
     }
 
+    // MARK: - Volume keys
+
+    @Test func minusKeyDecreasesVolume() {
+        let (state, app) = makeState()
+        let before = state.volume
+        KeyHandler.handle(key: .char("-"), state: state, app: app)
+        #expect(state.volume < before)
+    }
+
+    @Test func plusKeyIncreasesVolumeWhenBelow100() {
+        let (state, app) = makeState()
+        state.volumeDown() // 95%
+        let before = state.volume
+        KeyHandler.handle(key: .char("+"), state: state, app: app)
+        #expect(state.volume > before)
+    }
+
+    @Test func volumeKeysBlockedInSearchMode() {
+        let (state, app) = makeState()
+        state.startSearch()
+        let before = state.volume
+        KeyHandler.handle(key: .char("-"), state: state, app: app)
+        #expect(state.volume == before)
+        // "-" was typed into search query instead
+        #expect(state.searchQuery == "-")
+    }
+
+    @Test func volumeKeysBlockedInHelpOverlay() {
+        let (state, app) = makeState()
+        state.toggleHelp()
+        let before = state.volume
+        KeyHandler.handle(key: .char("-"), state: state, app: app)
+        #expect(state.volume == before)
+        #expect(state.isShowingHelp)
+    }
+
     // MARK: - Enter behavior depends on focus
 
     @Test func enterInSidebarFocusesTrackList() {

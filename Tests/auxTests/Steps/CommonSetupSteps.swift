@@ -1,4 +1,5 @@
 import AuxLib
+import Foundation
 import PickleKit
 
 /// Given steps for aux BDD scenarios.
@@ -133,6 +134,20 @@ struct CommonSetupSteps: StepDefinitions {
     ) { _ in
         let state = AuxTestContext.shared.ensureState()
         state.cycleVisualizerMode()
+    }
+
+    /// Given the volume is set to N
+    let givenVolumeSetTo = StepDefinition.given(
+        #"the volume is set to (\d+)"#
+    ) { match in
+        let state = AuxTestContext.shared.ensureState()
+        let target = Int(match.captures[0])!
+        let current = Int(round(state.volume * 100))
+        if target < current {
+            for _ in 0..<((current - target) / 5) { state.volumeDown() }
+        } else if target > current {
+            for _ in 0..<((target - current) / 5) { state.volumeUp() }
+        }
     }
 
     /// Given I am in search mode

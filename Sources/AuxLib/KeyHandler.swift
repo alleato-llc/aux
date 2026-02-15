@@ -73,6 +73,12 @@ public struct KeyHandler {
         case .char("b"):
             state.previousTrack()
 
+        case .char("-"):
+            state.volumeDown()
+
+        case .char("+"):
+            state.volumeUp()
+
         case .char("H"):
             state.scrollLeft()
 

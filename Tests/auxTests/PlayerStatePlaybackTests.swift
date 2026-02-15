@@ -235,6 +235,40 @@ import Testing
         #expect(state.visualizerMode == .spectrum)
     }
 
+    // MARK: - Volume
+
+    @Test func volumeDefaultIsPlayerVolume() {
+        let state = PlayerState(albums: TestData.makeLibrary(albumCount: 1, trackCount: 1))
+        #expect(state.volume == state.player.volume)
+    }
+
+    @Test func volumeDownDecreasesByStep() {
+        let state = PlayerState(albums: TestData.makeLibrary(albumCount: 1, trackCount: 1))
+        state.volumeDown()
+        #expect(state.volume == 0.95)
+    }
+
+    @Test func volumeUpAtMaxStaysAtMax() {
+        let state = PlayerState(albums: TestData.makeLibrary(albumCount: 1, trackCount: 1))
+        #expect(state.volume == 1.0)
+        state.volumeUp()
+        #expect(state.volume == 1.0)
+    }
+
+    @Test func volumeDownClampsAtZero() {
+        let state = PlayerState(albums: TestData.makeLibrary(albumCount: 1, trackCount: 1))
+        for _ in 0..<25 { state.volumeDown() }
+        #expect(state.volume == 0.0)
+    }
+
+    @Test func volumeUpFromZero() {
+        let state = PlayerState(albums: TestData.makeLibrary(albumCount: 1, trackCount: 1))
+        for _ in 0..<20 { state.volumeDown() }
+        #expect(state.volume == 0.0)
+        state.volumeUp()
+        #expect(abs(state.volume - 0.05) < 0.001)
+    }
+
     // MARK: - Focus
 
     @Test func focusLeftAndRight() {

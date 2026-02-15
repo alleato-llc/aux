@@ -25,6 +25,7 @@ struct AuxBDDTests {
             SearchVerificationSteps.self,
             HelpVerificationSteps.self,
             VisualizerVerificationSteps.self,
+            VolumeVerificationSteps.self,
         ])
         #expect(result.passed, "Scenario '\(test.description)' failed: \(failureDetails(result))")
     }

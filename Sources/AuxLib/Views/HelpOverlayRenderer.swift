@@ -8,6 +8,7 @@ public struct HelpOverlayRenderer {
         ("Enter", "Select album/play track"),
         ("Space/p", "Play/pause"),
         ("n/b", "Next/previous track"),
+        ("-/+", "Volume down/up"),
         ("/", "Search albums"),
         ("c", "Clear filter"),
         ("v", "Cycle visualizer"),

@@ -20,6 +20,12 @@ public struct NowPlayingRenderer {
         guard let track = state.currentTrack else {
             let text = "  No track playing"
             buffer.write(text, x: area.x, y: contentY, style: theme.statusBar)
+            // Show volume even with no track
+            let volText = volumeText(state.volume)
+            let volX = area.x + area.width - volText.count
+            if volX > area.x + text.count {
+                buffer.write(volText, x: volX, y: contentY, style: theme.statusBar)
+            }
             return
         }
 
@@ -54,11 +60,24 @@ public struct NowPlayingRenderer {
             bar.render(area: barArea, buffer: &buffer)
         }
 
-        // Row 3: time
+        // Row 3: time + volume
         let timeY = contentY + 2
         if timeY < area.bottom {
             buffer.write(timeText, x: area.x, y: timeY, style: theme.statusBar)
+            let volText = volumeText(state.volume)
+            let volX = area.x + area.width - volText.count
+            if volX > area.x + timeText.count {
+                buffer.write(volText, x: volX, y: timeY, style: theme.statusBar)
+            }
         }
+    }
+
+    private static func volumeText(_ volume: Float) -> String {
+        let percent = Int(round(volume * 100))
+        let filled = percent / 10
+        let empty = 10 - filled
+        let bar = String(repeating: "\u{2588}", count: filled) + String(repeating: "\u{2591}", count: empty)
+        return String(format: "Vol %@%4d%% ", bar, percent)
     }
 
     private static func formatTime(_ seconds: TimeInterval) -> String {

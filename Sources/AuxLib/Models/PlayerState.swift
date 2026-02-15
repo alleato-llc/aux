@@ -29,6 +29,8 @@ public final class PlayerState: @unchecked Sendable {
     public private(set) var visualizerMode: VisualizerMode = .spectrum
     public private(set) var isShowingHelp: Bool = false
     public private(set) var playbackStatus: PlaybackStatus = .idle
+    public private(set) var volume: Float = 1.0
+    private static let volumeStep: Float = 0.05
     private static let musicIcons = ["♪", "♫", "♬", "♩", "◉", "⏵", "☊", "⊛"]
     private var musicIconIndex: Int = Int.random(in: 0..<musicIcons.count)
 
@@ -39,6 +41,7 @@ public final class PlayerState: @unchecked Sendable {
     public init(albums: [Album], player: AudioPlayer = AudioPlayer()) {
         self.albums = albums
         self.player = player
+        self.volume = player.volume
         player.onStateChange = { [weak self] state in
             guard let self else { return }
             if state == .completed {
@@ -233,6 +236,18 @@ public final class PlayerState: @unchecked Sendable {
             selectedTrackIndex = prevIndex
             playTrack(tracks[prevIndex])
         }
+    }
+
+    // MARK: - Volume
+
+    public func volumeUp() {
+        volume = min(1.0, volume + Self.volumeStep)
+        player.volume = volume
+    }
+
+    public func volumeDown() {
+        volume = max(0.0, volume - Self.volumeStep)
+        player.volume = volume
     }
 
     // MARK: - Search
