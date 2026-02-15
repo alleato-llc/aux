@@ -6,3 +6,4 @@ DerivedData/
 .swiftpm/
 Package.resolved
 pickle-report.html
+.claude/settings.local.json
